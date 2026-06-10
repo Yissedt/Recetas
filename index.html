@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sabores de Sudamérica — 100 recetas tradicionales</title>
+  <meta name="description" content="100 recetas típicas de los 10 países de Sudamérica: Argentina, Bolivia, Brasil, Chile, Colombia, Ecuador, Paraguay, Perú, Uruguay y Venezuela. Con ingredientes, pasos y tiempos.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='44' fill='%23B23A33'/><circle cx='50' cy='50' r='26' fill='%23FAF8F4'/></svg>">
+</head>
+<body>
+
+  <header class="encabezado">
+    <h1>Sabores de Sudamérica</h1>
+    <p class="lema">100 recetas tradicionales de los 10 países del continente, con sus ingredientes, pasos y tiempos.</p>
+    <div class="franja" id="franja-paises" aria-hidden="true"></div>
+  </header>
+
+  <div class="controles">
+    <div class="controles-inner">
+      <div class="buscador">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+        </svg>
+        <input type="search" id="buscar" placeholder="Busca por nombre o ingrediente: ceviche, choclo, queso…" aria-label="Buscar recetas por nombre o ingrediente">
+      </div>
+      <nav class="chips" id="chips" aria-label="Filtrar por país"></nav>
+      <p class="contador" id="contador"></p>
+    </div>
+  </div>
+
+  <main class="contenedor">
+    <div class="grid" id="grid"></div>
+    <div class="vacio" id="vacio" hidden>
+      <h3>No encontramos esa receta</h3>
+      <p>Prueba con otra palabra o elige otro país: seguro hay algo delicioso esperándote.</p>
+    </div>
+  </main>
+
+  <div class="overlay" id="detalle" hidden role="dialog" aria-modal="true" aria-labelledby="detalle-titulo">
+    <div class="detalle-caja">
+      <button class="cerrar" id="cerrar-detalle" aria-label="Cerrar receta">&times;</button>
+      <div class="detalle-panel" id="detalle-panel"></div>
+    </div>
+  </div>
+
+  <footer class="pie">
+    <p>Sabores de Sudamérica — recetas tradicionales de Argentina, Bolivia, Brasil, Chile, Colombia, Ecuador, Paraguay, Perú, Uruguay y Venezuela.</p>
+  </footer>
+
+  <script src="js/recetas.js"></script>
+  <script src="js/ilustraciones.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
