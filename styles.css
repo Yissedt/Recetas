@@ -248,6 +248,8 @@ body.sin-scroll { overflow: hidden; }
 
 /* ---------- detalle ---------- */
 
+.overlay[hidden] { display: none; }
+
 .overlay {
   position: fixed;
   inset: 0;
