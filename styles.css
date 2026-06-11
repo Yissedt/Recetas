@@ -559,11 +559,11 @@ body.sin-scroll { overflow: hidden; }
   margin: 12px 0 0;
 }
 
-/* ---------- mapa interactivo ---------- */
+/* ---------- mapa interactivo (imagen de especias) ---------- */
 
 .mapa-seccion {
-  max-width: 880px;
-  margin: 24px auto 0;
+  max-width: 920px;
+  margin: 26px auto 0;
   padding: 0 24px;
   text-align: center;
 }
@@ -582,37 +582,79 @@ body.sin-scroll { overflow: hidden; }
 
 .mapa-toggle:hover { border-color: #C9C0B0; }
 
-.mapa { margin-top: 8px; }
+.mapa { margin-top: 12px; }
 .mapa.oculto { display: none; }
 
-.mapa svg { width: 100%; height: auto; }
-
-.mapa .continentes path {
-  fill: #ECE6DA;
-  stroke: #E0D9CB;
-  stroke-width: 1.5;
+.mapa-lienzo {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--sombra);
 }
 
-.mapa-pais { cursor: pointer; outline: none; }
+.mapa-lienzo img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
 
-.mapa-pais text {
-  font-family: var(--fuente-texto);
-  font-size: 13px;
-  font-weight: 600;
-  fill: var(--tinta-suave);
-  pointer-events: none;
+.mapa-pais {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  background: none;
+  border: none;
+  padding: 10px;          /* área táctil generosa */
+  cursor: pointer;
+}
+
+.punto-mapa {
+  display: block;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2.5px solid #FFFFFF;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s;
 }
 
 .mapa-pais:hover .punto-mapa,
-.mapa-pais:focus-visible .punto-mapa { r: 10; }
+.mapa-pais:focus-visible .punto-mapa { transform: scale(1.3); }
 
-.mapa-pais.activo .punto-mapa { r: 10; }
-.mapa-pais.activo text { fill: var(--tinta); }
+.mapa-pais.activo .punto-mapa {
+  transform: scale(1.3);
+  outline: 3px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
 
-.mapa-pais .punto-mapa { transition: r 0.15s; }
+.mapa-etiqueta {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--tinta);
+  background: rgba(255, 252, 246, 0.92);
+  border-radius: 99px;
+  padding: 2px 9px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.lado-abajo  .mapa-etiqueta { top: calc(50% + 16px); }
+.lado-arriba .mapa-etiqueta { bottom: calc(50% + 16px); }
+.lado-der    .mapa-etiqueta { left: calc(50% + 16px); }
+.lado-izq    .mapa-etiqueta { right: calc(50% + 16px); }
+
+.mapa-pais.activo .mapa-etiqueta {
+  background: var(--tinta);
+  color: #FBF9F5;
+}
 
 @media (max-width: 720px) {
-  .mapa-pais text { font-size: 17px; }
-  .mapa-pais .punto-mapa { r: 11; }
-  .mapa-pais .halo { r: 20; }
-}
+  .mapa-seccion { padding: 0 14px; }
+  .mapa-etiqueta { display: none; }            /* en celular: solo puntos */
+  .mapa-pais.activo .mapa-etiqueta { display: block; }  /* salvo el elegido */
+  .punto-mapa { width: 17px; height: 17px; }
+}}

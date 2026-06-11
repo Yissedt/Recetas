@@ -171,57 +171,44 @@ $buscar.addEventListener("input", () => {
 /* ---------- mapa interactivo ---------- */
 
 const MAPA_POS = {
-  /* país: [x, y, desplazamiento x de la etiqueta, desplazamiento y, alineación] */
-  "México":    [218, 188,   0,  24, "middle"],
-  "Venezuela": [330, 232,  12,   4, "start"],
-  "Colombia":  [296, 247, -12,   4, "end"],
-  "Ecuador":   [282, 268, -12,   4, "end"],
-  "Perú":      [296, 292, -12,   4, "end"],
-  "Brasil":    [362, 278,  12,   4, "start"],
-  "Bolivia":   [330, 303,  12,   4, "start"],
-  "Paraguay":  [346, 326,  12,   4, "start"],
-  "Chile":     [303, 352, -12,   4, "end"],
-  "Argentina": [324, 368,   2,  24, "middle"],
-  "Uruguay":   [352, 346,  12,   4, "start"],
-  "España":    [486, 142,   0,  24, "middle"],
-  "Francia":   [507, 114,   0, -14, "middle"],
-  "Italia":    [536, 134,  12,   4, "start"],
-  "China":     [800, 150,   0,  24, "middle"],
-  "Japón":     [884, 148,  13,   4, "start"]
+  /* país: [x %, y % sobre la imagen del mapa, lado de la etiqueta] */
+  "México":    [26.0, 53.0, "abajo"],
+  "Venezuela": [33.5, 59.0, "der"],
+  "Colombia":  [31.0, 59.5, "izq"],
+  "Ecuador":   [29.8, 62.5, "izq"],
+  "Perú":      [30.8, 66.5, "izq"],
+  "Brasil":    [35.5, 65.0, "der"],
+  "Bolivia":   [33.0, 69.5, "der"],
+  "Paraguay":  [33.8, 72.5, "der"],
+  "Chile":     [31.3, 75.0, "izq"],
+  "Argentina": [32.8, 78.0, "abajo"],
+  "Uruguay":   [34.0, 75.6, "der"],
+  "España":    [46.6, 42.3, "abajo"],
+  "Francia":   [48.0, 38.5, "arriba"],
+  "Italia":    [51.3, 42.5, "der"],
+  "China":     [66.5, 40.0, "abajo"],
+  "Japón":     [76.0, 38.5, "der"]
 };
 
-const MAPA_CONTINENTES = `
-  <path d="M95 95 Q120 55 185 58 Q260 50 290 85 Q310 105 295 130 Q315 140 300 165 Q285 195 260 200 Q245 215 250 228 Q260 238 272 240 Q262 252 248 246 Q235 235 232 218 Q210 205 185 195 Q140 185 115 155 Q85 125 95 95 Z"/>
-  <path d="M283 235 Q310 218 345 228 Q380 238 385 265 Q388 295 365 318 Q352 345 340 368 Q330 392 318 396 Q306 392 305 368 Q298 335 296 305 Q282 275 283 235 Z"/>
-  <path d="M330 60 Q360 42 392 52 Q405 65 392 78 Q365 85 345 78 Q328 72 330 60 Z"/>
-  <path d="M468 110 Q480 92 505 92 Q525 85 545 95 Q565 92 572 105 Q578 120 565 130 Q548 142 532 140 Q512 150 495 145 Q472 138 468 110 Z"/>
-  <path d="M478 165 Q505 152 540 160 Q575 168 580 200 Q585 235 568 265 Q558 300 540 322 Q525 340 512 322 Q498 295 492 262 Q478 230 472 198 Q470 178 478 165 Z"/>
-  <path d="M560 95 Q600 65 660 62 Q730 55 790 72 Q845 85 862 115 Q872 140 852 158 Q865 175 848 190 Q820 205 790 198 Q775 215 758 208 Q748 195 752 182 Q720 188 695 178 Q672 195 662 225 Q655 248 642 240 Q632 222 638 200 Q610 192 592 172 Q568 145 560 118 Z"/>
-  <path d="M872 132 Q885 122 893 135 Q898 150 888 162 Q878 172 870 160 Q865 145 872 132 Z"/>
-  <path d="M755 240 Q775 232 788 245 Q780 262 765 262 Q752 255 755 240 Z"/>
-  <path d="M790 315 Q820 298 858 308 Q885 318 882 345 Q875 368 845 372 Q812 375 795 358 Q782 338 790 315 Z"/>`;
-
 function pintarMapa() {
-  const puntos = Object.entries(MAPA_POS).map(([pais, [x, y, ex, ey, alin]]) => {
+  const puntos = Object.entries(MAPA_POS).map(([pais, [x, y, lado]]) => {
     const c = PAISES[pais].color;
-    return `<g class="mapa-pais" data-pais="${pais}" tabindex="0" role="button" aria-label="Ver recetas de ${pais}">
-      <circle class="halo" cx="${x}" cy="${y}" r="16" fill="${c}" opacity="0"/>
-      <circle class="punto-mapa" cx="${x}" cy="${y}" r="8" fill="${c}" stroke="#FFFFFF" stroke-width="2.5"/>
-      <text x="${x + ex}" y="${y + ey}" text-anchor="${alin}">${pais}</text>
-    </g>`;
+    return `<button type="button" class="mapa-pais lado-${lado}" data-pais="${pais}"
+      style="left:${x}%; top:${y}%" aria-label="Ver recetas de ${pais}">
+      <span class="punto-mapa" style="background:${c}"></span>
+      <span class="mapa-etiqueta">${pais}</span>
+    </button>`;
   }).join("");
 
-  $mapa.innerHTML = `<svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Mapa para elegir país">
-    <g class="continentes">${MAPA_CONTINENTES}</g>
+  $mapa.innerHTML = `<div class="mapa-lienzo">
+    <img src="img/mapa.jpg" alt="Mapamundi hecho con especias; elige un país para ver sus recetas">
     ${puntos}
-  </svg>`;
+  </div>`;
 }
 
 function pintarMapaEstado() {
-  $mapa.querySelectorAll(".mapa-pais").forEach(g => {
-    const activo = g.dataset.pais === estado.pais;
-    g.classList.toggle("activo", activo);
-    g.querySelector(".halo").setAttribute("opacity", activo ? "0.25" : "0");
+  $mapa.querySelectorAll(".mapa-pais").forEach(b => {
+    b.classList.toggle("activo", b.dataset.pais === estado.pais);
   });
 }
 
@@ -230,12 +217,6 @@ $mapa.addEventListener("click", e => {
   if (!g) return;
   estado.pais = (estado.pais === g.dataset.pais) ? "Todos" : g.dataset.pais;
   pintarChips(); pintarGrid();
-});
-
-$mapa.addEventListener("keydown", e => {
-  if (e.key !== "Enter" && e.key !== " ") return;
-  const g = e.target.closest(".mapa-pais");
-  if (g) { e.preventDefault(); g.click(); }
 });
 
 $mapaBtn.addEventListener("click", () => {

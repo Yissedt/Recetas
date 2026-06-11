@@ -17,8 +17,9 @@ Todos los archivos van **sueltos en la raíz** del repositorio (sin carpetas),
 igual que tu repositorio actual. Para actualizar:
 
 1. En tu repositorio, ve a **Add file → Upload files**.
-2. Arrastra los 6 archivos: `index.html`, `styles.css`, `recetas.js`,
-   `ilustraciones.js`, `app.js` y `README.md`.
+2. Arrastra los 6 archivos (`index.html`, `styles.css`, `recetas.js`,
+   `ilustraciones.js`, `app.js`, `README.md`) **y también la carpeta `img`
+   completa** (GitHub conserva las carpetas al arrastrarlas).
 3. **Commit changes**. GitHub reemplaza los archivos antiguos automáticamente.
 4. Espera 1–2 minutos y recarga el sitio con Ctrl+Shift+R.
 
@@ -30,6 +31,7 @@ styles.css        Estilos
 recetas.js        Las 160 recetas (los datos)
 ilustraciones.js  Ilustraciones SVG y colores por país
 app.js            Búsqueda, filtros, mapa, porciones y vista de detalle
+img/              Imágenes: mapa.jpg (el mapa) y fotos de recetas
 ```
 
 ## Cómo editar o agregar recetas
@@ -71,14 +73,43 @@ y aparecerá en ambos filtros.
 `envuelto`, `pan`, `pastel`, `porcion`, `taza`, `pescado`.
 
 Para usar una foto real en una receta, agrégale el campo
-`foto: "img/mi-foto.jpg"` y sube la imagen a una carpeta `img/` en el
-repositorio: la foto reemplaza automáticamente al dibujo.
+`foto: "img/mi-foto.jpg"` y sube la imagen a la carpeta `img/` del
+repositorio: la foto reemplaza automáticamente al dibujo, en la tarjeta
+y en el detalle. El completo italiano (`cl-06`) ya viene con foto como
+ejemplo funcionando.
+
+## Cómo generar fotos para las demás recetas
+
+Puedes crear las fotos con ChatGPT, Gemini u otro generador de imágenes.
+Para que todas se vean consistentes entre sí (mismo estilo que el completo
+italiano), usa esta plantilla de prompt cambiando solo lo que está entre
+corchetes:
+
+> Fotografía profesional de comida: [NOMBRE DEL PLATO], plato tradicional
+> de [PAÍS], servido en [plato de cerámica / vaso / fuente según corresponda],
+> sobre una tabla de madera oscura, luz natural cálida lateral, primer plano
+> apetitoso, estilo editorial gastronómico, fondo ligeramente desenfocado con
+> algunos ingredientes del plato, proporción 3:2.
+
+Flujo para cada receta:
+
+1. Genera la imagen y descárgala.
+2. Renómbrala en minúsculas y sin espacios, por ejemplo `pastel-de-choclo.jpg`.
+3. Súbela a la carpeta `img/` del repositorio (entra a la carpeta `img` →
+   Add file → Upload files).
+4. En `recetas.js`, agrega a esa receta: `foto:"img/pastel-de-choclo.jpg",`
+   justo después del `id`.
+5. Commit, espera 1–2 minutos y recarga.
+
+Consejo: si la imagen pesa más de ~400 KB, redúcela antes de subirla
+(cualquier herramienta como squoosh.app sirve) para que el sitio cargue rápido.
 
 ## Agregar un país nuevo
 
 1. En `ilustraciones.js`, agrega el país con su color al objeto `PAISES`.
 2. En `app.js`, agrega su posición en el mapa al objeto `MAPA_POS`
-   (coordenadas x, y dentro del lienzo de 1000×430).
+   (porcentajes x e y sobre la imagen del mapa, y el lado de la etiqueta:
+   "abajo", "arriba", "izq" o "der").
 3. En `recetas.js`, agrega sus recetas con `pais` exactamente igual al nombre
    registrado en `PAISES`.
 
