@@ -1,4 +1,4 @@
-/* Sabores de Sudamérica — ilustraciones SVG generadas
+/* Sabores del Mundo — ilustraciones SVG generadas
    Cada receta define ilu: { t: "plantilla", c: [color1, color2, color3] }.
    Para usar una foto real en lugar de la ilustración, agrega a la receta:
    foto: "img/mi-foto.jpg"  (la imagen reemplaza automáticamente al SVG). */
@@ -13,7 +13,13 @@ const PAISES = {
   "Paraguay":  { color: "#5A63A8" },
   "Perú":      { color: "#8A4A6B" },
   "Uruguay":   { color: "#4F6D8F" },
-  "Venezuela": { color: "#7A8C3B" }
+  "Venezuela": { color: "#7A8C3B" },
+  "México":    { color: "#C0563B" },
+  "España":    { color: "#C9425E" },
+  "Italia":    { color: "#6FA06A" },
+  "Francia":   { color: "#34529E" },
+  "China":     { color: "#9C2B2B" },
+  "Japón":     { color: "#D98A9E" }
 };
 
 const LINEA = "#E3DDD2";   // trazo de loza

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sabores de Sudamérica — 100 recetas tradicionales</title>
-  <meta name="description" content="100 recetas típicas de los 10 países de Sudamérica: Argentina, Bolivia, Brasil, Chile, Colombia, Ecuador, Paraguay, Perú, Uruguay y Venezuela. Con ingredientes, pasos y tiempos.">
+  <title>Sabores del Mundo — 160 recetas tradicionales</title>
+  <meta name="description" content="160 recetas típicas de 16 países: Sudamérica completa más México, España, Italia, Francia, China y Japón. Con búsqueda, filtros, mapa interactivo y porciones ajustables.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,10 +16,15 @@
 <body>
 
   <header class="encabezado">
-    <h1>Sabores de Sudamérica</h1>
-    <p class="lema">100 recetas tradicionales de los 10 países del continente, con sus ingredientes, pasos y tiempos.</p>
+    <h1>Sabores del Mundo</h1>
+    <p class="lema">160 recetas tradicionales de 16 países, con ingredientes ajustables, pasos y tiempos.</p>
     <div class="franja" id="franja-paises" aria-hidden="true"></div>
   </header>
+
+  <section class="mapa-seccion" aria-label="Explorar por mapa">
+    <button class="mapa-toggle" id="mapa-toggle" aria-expanded="true">🌍 Ocultar el mapa</button>
+    <div class="mapa" id="mapa"></div>
+  </section>
 
   <div class="controles">
     <div class="controles-inner">
@@ -28,9 +33,17 @@
           <circle cx="11" cy="11" r="7"></circle>
           <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
         </svg>
-        <input type="search" id="buscar" placeholder="Busca por nombre o ingrediente: ceviche, choclo, queso…" aria-label="Buscar recetas por nombre o ingrediente">
+        <input type="search" id="buscar" placeholder="Busca por nombre o ingrediente: ceviche, queso, arroz…" aria-label="Buscar recetas por nombre o ingrediente">
       </div>
       <nav class="chips" id="chips" aria-label="Filtrar por país"></nav>
+      <div class="filtros-fila">
+        <span class="rotulo">Tipo</span>
+        <nav class="chips" id="chips-tipo" aria-label="Filtrar por tipo" style="display:contents"></nav>
+      </div>
+      <div class="filtros-fila">
+        <span class="rotulo">Dificultad</span>
+        <nav class="chips" id="chips-dif" aria-label="Filtrar por dificultad" style="display:contents"></nav>
+      </div>
       <p class="contador" id="contador"></p>
     </div>
   </div>
@@ -39,7 +52,7 @@
     <div class="grid" id="grid"></div>
     <div class="vacio" id="vacio" hidden>
       <h3>No encontramos esa receta</h3>
-      <p>Prueba con otra palabra o elige otro país: seguro hay algo delicioso esperándote.</p>
+      <p>Prueba con otra palabra o cambia los filtros: seguro hay algo delicioso esperándote.</p>
     </div>
   </main>
 
@@ -51,7 +64,7 @@
   </div>
 
   <footer class="pie">
-    <p>Sabores de Sudamérica — recetas tradicionales de Argentina, Bolivia, Brasil, Chile, Colombia, Ecuador, Paraguay, Perú, Uruguay y Venezuela.</p>
+    <p>Sabores del Mundo — recetas tradicionales de Argentina, Bolivia, Brasil, Chile, Colombia, Ecuador, Paraguay, Perú, Uruguay, Venezuela, México, España, Italia, Francia, China y Japón.</p>
   </footer>
 
   <script src="recetas.js"></script>

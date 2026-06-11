@@ -1,26 +1,43 @@
-/* Sabores de Sudamérica — lógica de la interfaz */
+/* Sabores del Mundo — lógica de la interfaz */
 
-const estado = { pais: "Todos", busqueda: "" };
+const estado = { pais: "Todos", tipo: "todos", dif: "todas", busqueda: "" };
 
-const $grid    = document.getElementById("grid");
-const $chips   = document.getElementById("chips");
-const $buscar  = document.getElementById("buscar");
-const $contador= document.getElementById("contador");
-const $vacio   = document.getElementById("vacio");
-const $franja  = document.getElementById("franja-paises");
-const $overlay = document.getElementById("detalle");
-const $panel   = document.getElementById("detalle-panel");
-const $cerrar  = document.getElementById("cerrar-detalle");
+const TIPOS = [
+  { id: "todos",  nombre: "Todos" },
+  { id: "comida", nombre: "Comidas" },
+  { id: "bebida", nombre: "Bebidas" },
+  { id: "postre", nombre: "Postres" }
+];
 
-let ultimaTarjeta = null; // para devolver el foco al cerrar el detalle
+const DIFS = [
+  { id: "todas", nombre: "Todas" },
+  { id: "facil", nombre: "Fácil",  estrellas: "★–★★" },
+  { id: "media", nombre: "Media",  estrellas: "★★★" },
+  { id: "alta",  nombre: "Alta",   estrellas: "★★★★+" }
+];
+
+const $grid     = document.getElementById("grid");
+const $chips    = document.getElementById("chips");
+const $tipos    = document.getElementById("chips-tipo");
+const $difs     = document.getElementById("chips-dif");
+const $buscar   = document.getElementById("buscar");
+const $contador = document.getElementById("contador");
+const $vacio    = document.getElementById("vacio");
+const $franja   = document.getElementById("franja-paises");
+const $mapa     = document.getElementById("mapa");
+const $mapaBtn  = document.getElementById("mapa-toggle");
+const $overlay  = document.getElementById("detalle");
+const $panel    = document.getElementById("detalle-panel");
+const $cerrar   = document.getElementById("cerrar-detalle");
+
+let ultimaTarjeta = null;
+let recetaAbierta = null;
+let porcionesSel = 0;
 
 /* ---------- utilidades ---------- */
 
 function normalizar(texto) {
-  return (texto || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  return (texto || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function formatoTiempo(min) {
@@ -29,40 +46,202 @@ function formatoTiempo(min) {
   return m ? `${h} h ${m} min` : `${h} h`;
 }
 
-/* ---------- franja de países (firma visual del sitio) ---------- */
+function capitalizar(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function etiquetaTipo(r) {
+  return r.tipo.map(capitalizar).join(" · ");
+}
+
+function estrellas(nivel) {
+  let html = "";
+  for (let i = 1; i <= 5; i++) {
+    html += `<span class="estrella${i <= nivel ? " llena" : ""}">★</span>`;
+  }
+  return `<span class="estrellas" role="img" aria-label="Dificultad ${nivel} de 5">${html}</span>`;
+}
+
+function grupoDif(nivel) {
+  if (nivel <= 2) return "facil";
+  if (nivel === 3) return "media";
+  return "alta";
+}
+
+/* ---------- escalado de cantidades según porciones ----------
+   Multiplica los números de un ingrediente por el factor, respetando
+   fracciones ("1/2") y decimales ("2,5"). No toca medidas de tamaño
+   o temperatura (cm, °C) ni patrones como "1x6". */
+
+const FRACCIONES = [
+  [0.25, "1/4"], [0.33, "1/3"], [0.5, "1/2"],
+  [0.66, "2/3"], [0.75, "3/4"]
+];
+
+function formatoCantidad(v) {
+  if (v < 0.95) {
+    let mejor = FRACCIONES[0];
+    for (const f of FRACCIONES) {
+      if (Math.abs(f[0] - v) < Math.abs(mejor[0] - v)) mejor = f;
+    }
+    return mejor[1];
+  }
+  if (v < 10) {
+    const r = Math.round(v * 10) / 10;
+    return Number.isInteger(r) ? String(r) : String(r).replace(".", ",");
+  }
+  return String(Math.round(v));
+}
+
+function escalarIngrediente(texto, factor) {
+  if (factor === 1) return texto;
+  return texto.replace(/(\d+\/\d+|\d+(?:[.,]\d+)?)/g, (num, _, pos) => {
+    const despues = texto.slice(pos + num.length);
+    const antes = texto.slice(0, pos);
+    // No escalar tamaños, temperaturas ni dimensiones
+    if (/^\s?(cm|°|%)/.test(despues)) return num;
+    if (/^x\d/.test(despues) || /x$/.test(antes)) return num;
+    let valor;
+    if (num.includes("/")) {
+      const [a, b] = num.split("/");
+      valor = parseFloat(a) / parseFloat(b);
+    } else {
+      valor = parseFloat(num.replace(",", "."));
+    }
+    return formatoCantidad(valor * factor);
+  });
+}
+
+/* ---------- franja de colores ---------- */
 
 function pintarFranja() {
   $franja.innerHTML = Object.values(PAISES)
-    .map(p => `<span style="background:${p.color}"></span>`)
-    .join("");
+    .map(p => `<span style="background:${p.color}"></span>`).join("");
 }
 
-/* ---------- chips de filtro ---------- */
+/* ---------- chips de filtros ---------- */
 
 function pintarChips() {
   const nombres = ["Todos", ...Object.keys(PAISES)];
   $chips.innerHTML = nombres.map(n => {
     const activo = n === estado.pais ? " activo" : "";
-    const punto = n === "Todos"
-      ? ""
-      : `<span class="punto" style="background:${PAISES[n].color}"></span>`;
+    const punto = n === "Todos" ? "" :
+      `<span class="punto" style="background:${PAISES[n].color}"></span>`;
     return `<button class="chip${activo}" data-pais="${n}" aria-pressed="${n === estado.pais}">${punto}${n}</button>`;
   }).join("");
+
+  $tipos.innerHTML = TIPOS.map(t => {
+    const activo = t.id === estado.tipo ? " activo" : "";
+    return `<button class="chip chico${activo}" data-tipo="${t.id}" aria-pressed="${t.id === estado.tipo}">${t.nombre}</button>`;
+  }).join("");
+
+  $difs.innerHTML = DIFS.map(d => {
+    const activo = d.id === estado.dif ? " activo" : "";
+    const extra = d.estrellas ? ` <span class="mini-estrellas">${d.estrellas}</span>` : "";
+    return `<button class="chip chico${activo}" data-dif="${d.id}" aria-pressed="${d.id === estado.dif}">${d.nombre}${extra}</button>`;
+  }).join("");
+
+  pintarMapaEstado();
 }
 
-$chips.addEventListener("click", (e) => {
-  const boton = e.target.closest(".chip");
-  if (!boton) return;
-  estado.pais = boton.dataset.pais;
-  pintarChips();
-  pintarGrid();
+$chips.addEventListener("click", e => {
+  const b = e.target.closest(".chip");
+  if (!b) return;
+  estado.pais = b.dataset.pais;
+  pintarChips(); pintarGrid();
 });
 
-/* ---------- búsqueda ---------- */
+$tipos.addEventListener("click", e => {
+  const b = e.target.closest(".chip");
+  if (!b) return;
+  estado.tipo = b.dataset.tipo;
+  pintarChips(); pintarGrid();
+});
+
+$difs.addEventListener("click", e => {
+  const b = e.target.closest(".chip");
+  if (!b) return;
+  estado.dif = b.dataset.dif;
+  pintarChips(); pintarGrid();
+});
 
 $buscar.addEventListener("input", () => {
   estado.busqueda = $buscar.value;
   pintarGrid();
+});
+
+/* ---------- mapa interactivo ---------- */
+
+const MAPA_POS = {
+  /* país: [x, y, desplazamiento x de la etiqueta, desplazamiento y, alineación] */
+  "México":    [218, 188,   0,  24, "middle"],
+  "Venezuela": [330, 232,  12,   4, "start"],
+  "Colombia":  [296, 247, -12,   4, "end"],
+  "Ecuador":   [282, 268, -12,   4, "end"],
+  "Perú":      [296, 292, -12,   4, "end"],
+  "Brasil":    [362, 278,  12,   4, "start"],
+  "Bolivia":   [330, 303,  12,   4, "start"],
+  "Paraguay":  [346, 326,  12,   4, "start"],
+  "Chile":     [303, 352, -12,   4, "end"],
+  "Argentina": [324, 368,   2,  24, "middle"],
+  "Uruguay":   [352, 346,  12,   4, "start"],
+  "España":    [486, 142,   0,  24, "middle"],
+  "Francia":   [507, 114,   0, -14, "middle"],
+  "Italia":    [536, 134,  12,   4, "start"],
+  "China":     [800, 150,   0,  24, "middle"],
+  "Japón":     [884, 148,  13,   4, "start"]
+};
+
+const MAPA_CONTINENTES = `
+  <path d="M95 95 Q120 55 185 58 Q260 50 290 85 Q310 105 295 130 Q315 140 300 165 Q285 195 260 200 Q245 215 250 228 Q260 238 272 240 Q262 252 248 246 Q235 235 232 218 Q210 205 185 195 Q140 185 115 155 Q85 125 95 95 Z"/>
+  <path d="M283 235 Q310 218 345 228 Q380 238 385 265 Q388 295 365 318 Q352 345 340 368 Q330 392 318 396 Q306 392 305 368 Q298 335 296 305 Q282 275 283 235 Z"/>
+  <path d="M330 60 Q360 42 392 52 Q405 65 392 78 Q365 85 345 78 Q328 72 330 60 Z"/>
+  <path d="M468 110 Q480 92 505 92 Q525 85 545 95 Q565 92 572 105 Q578 120 565 130 Q548 142 532 140 Q512 150 495 145 Q472 138 468 110 Z"/>
+  <path d="M478 165 Q505 152 540 160 Q575 168 580 200 Q585 235 568 265 Q558 300 540 322 Q525 340 512 322 Q498 295 492 262 Q478 230 472 198 Q470 178 478 165 Z"/>
+  <path d="M560 95 Q600 65 660 62 Q730 55 790 72 Q845 85 862 115 Q872 140 852 158 Q865 175 848 190 Q820 205 790 198 Q775 215 758 208 Q748 195 752 182 Q720 188 695 178 Q672 195 662 225 Q655 248 642 240 Q632 222 638 200 Q610 192 592 172 Q568 145 560 118 Z"/>
+  <path d="M872 132 Q885 122 893 135 Q898 150 888 162 Q878 172 870 160 Q865 145 872 132 Z"/>
+  <path d="M755 240 Q775 232 788 245 Q780 262 765 262 Q752 255 755 240 Z"/>
+  <path d="M790 315 Q820 298 858 308 Q885 318 882 345 Q875 368 845 372 Q812 375 795 358 Q782 338 790 315 Z"/>`;
+
+function pintarMapa() {
+  const puntos = Object.entries(MAPA_POS).map(([pais, [x, y, ex, ey, alin]]) => {
+    const c = PAISES[pais].color;
+    return `<g class="mapa-pais" data-pais="${pais}" tabindex="0" role="button" aria-label="Ver recetas de ${pais}">
+      <circle class="halo" cx="${x}" cy="${y}" r="16" fill="${c}" opacity="0"/>
+      <circle class="punto-mapa" cx="${x}" cy="${y}" r="8" fill="${c}" stroke="#FFFFFF" stroke-width="2.5"/>
+      <text x="${x + ex}" y="${y + ey}" text-anchor="${alin}">${pais}</text>
+    </g>`;
+  }).join("");
+
+  $mapa.innerHTML = `<svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Mapa para elegir país">
+    <g class="continentes">${MAPA_CONTINENTES}</g>
+    ${puntos}
+  </svg>`;
+}
+
+function pintarMapaEstado() {
+  $mapa.querySelectorAll(".mapa-pais").forEach(g => {
+    const activo = g.dataset.pais === estado.pais;
+    g.classList.toggle("activo", activo);
+    g.querySelector(".halo").setAttribute("opacity", activo ? "0.25" : "0");
+  });
+}
+
+$mapa.addEventListener("click", e => {
+  const g = e.target.closest(".mapa-pais");
+  if (!g) return;
+  estado.pais = (estado.pais === g.dataset.pais) ? "Todos" : g.dataset.pais;
+  pintarChips(); pintarGrid();
+});
+
+$mapa.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const g = e.target.closest(".mapa-pais");
+  if (g) { e.preventDefault(); g.click(); }
+});
+
+$mapaBtn.addEventListener("click", () => {
+  const oculto = $mapa.classList.toggle("oculto");
+  $mapaBtn.setAttribute("aria-expanded", String(!oculto));
+  $mapaBtn.textContent = oculto ? "🌍 Mostrar el mapa" : "🌍 Ocultar el mapa";
 });
 
 /* ---------- filtrado ---------- */
@@ -71,60 +250,74 @@ function recetasFiltradas() {
   const q = normalizar(estado.busqueda.trim());
   return RECETAS.filter(r => {
     if (estado.pais !== "Todos" && r.pais !== estado.pais) return false;
+    if (estado.tipo !== "todos" && !r.tipo.includes(estado.tipo)) return false;
+    if (estado.dif !== "todas" && grupoDif(r.nivel) !== estado.dif) return false;
     if (!q) return true;
-    const pajar = normalizar(r.nombre + " " + r.pais + " " + r.ingredientes.join(" "));
-    return q.split(/\s+/).every(palabra => pajar.includes(palabra));
+    const pajar = normalizar(r.nombre + " " + r.pais + " " + r.tipo.join(" ") + " " + r.ingredientes.join(" "));
+    return q.split(/\s+/).every(p => pajar.includes(p));
   });
 }
 
-/* ---------- grilla de tarjetas ---------- */
+/* ---------- grilla ---------- */
 
 function pintarGrid() {
   const lista = recetasFiltradas();
 
-  $contador.textContent = lista.length === 1
-    ? "1 receta"
-    : `${lista.length} recetas`;
-
+  $contador.textContent = lista.length === 1 ? "1 receta" : `${lista.length} recetas`;
   $vacio.hidden = lista.length !== 0;
-  $grid.hidden  = lista.length === 0;
+  $grid.hidden = lista.length === 0;
 
   $grid.innerHTML = lista.map(r => {
     const color = PAISES[r.pais].color;
     return `
     <article class="tarjeta" data-id="${r.id}" tabindex="0" role="button"
              aria-label="${r.nombre}, receta de ${r.pais}">
-      <div class="tarjeta-ilu">${iluHTML(r)}</div>
+      <div class="tarjeta-ilu">
+        <span class="badge-tipo">${etiquetaTipo(r)}</span>
+        ${iluHTML(r)}
+      </div>
       <div class="tarjeta-info">
         <span class="eyebrow" style="color:${color}">${r.pais}</span>
         <h3>${r.nombre}</h3>
-        <p class="meta">${formatoTiempo(r.tiempo)} · ${r.porciones} porciones · ${r.dificultad}</p>
+        <p class="meta">${formatoTiempo(r.tiempo)} · ${r.porciones} porciones · ${estrellas(r.nivel)}</p>
       </div>
     </article>`;
   }).join("");
 }
 
-$grid.addEventListener("click", (e) => {
-  const tarjeta = e.target.closest(".tarjeta");
-  if (tarjeta) abrirDetalle(tarjeta.dataset.id, tarjeta);
+$grid.addEventListener("click", e => {
+  const t = e.target.closest(".tarjeta");
+  if (t) abrirDetalle(t.dataset.id, t);
 });
 
-$grid.addEventListener("keydown", (e) => {
+$grid.addEventListener("keydown", e => {
   if (e.key !== "Enter" && e.key !== " ") return;
-  const tarjeta = e.target.closest(".tarjeta");
-  if (tarjeta) { e.preventDefault(); abrirDetalle(tarjeta.dataset.id, tarjeta); }
+  const t = e.target.closest(".tarjeta");
+  if (t) { e.preventDefault(); abrirDetalle(t.dataset.id, t); }
 });
 
 /* ---------- detalle ---------- */
+
+function pintarIngredientes() {
+  const r = recetaAbierta;
+  const factor = porcionesSel / r.porciones;
+  document.getElementById("porciones-num").textContent = porcionesSel;
+  document.getElementById("lista-ingredientes").innerHTML =
+    r.ingredientes.map(i => `<li>${escalarIngrediente(i, factor)}</li>`).join("");
+  document.getElementById("nota-porciones").hidden = porcionesSel === r.porciones;
+}
 
 function abrirDetalle(id, origen) {
   const r = RECETAS.find(x => x.id === id);
   if (!r) return;
   ultimaTarjeta = origen || null;
+  recetaAbierta = r;
+  porcionesSel = r.porciones;
   const color = PAISES[r.pais].color;
 
   $panel.innerHTML = `
     <div class="detalle-ilu" style="background:${color}1f">
+      <span class="badge-tipo">${etiquetaTipo(r)}</span>
       ${iluHTML(r)}
     </div>
     <div class="detalle-contenido">
@@ -133,19 +326,33 @@ function abrirDetalle(id, origen) {
       <p class="detalle-desc">${r.desc}</p>
       <ul class="detalle-meta">
         <li><strong>${formatoTiempo(r.tiempo)}</strong><span>tiempo</span></li>
-        <li><strong>${r.porciones}</strong><span>porciones</span></li>
-        <li><strong>${r.dificultad}</strong><span>dificultad</span></li>
+        <li>
+          <strong class="stepper">
+            <button type="button" id="menos-porcion" aria-label="Una porción menos">−</button>
+            <span id="porciones-num">${r.porciones}</span>
+            <button type="button" id="mas-porcion" aria-label="Una porción más">+</button>
+          </strong>
+          <span>porciones</span>
+        </li>
+        <li><strong>${estrellas(r.nivel)}</strong><span>dificultad: ${r.dificultad.toLowerCase()}</span></li>
       </ul>
+      <p class="nota-porciones" id="nota-porciones" hidden>Las cantidades están ajustadas a ${"" /* texto fijo */}tus porciones. El tiempo de preparación varía poco con las porciones.</p>
       <h3>Ingredientes</h3>
-      <ul class="ingredientes">
-        ${r.ingredientes.map(i => `<li>${i}</li>`).join("")}
-      </ul>
+      <ul class="ingredientes" id="lista-ingredientes"></ul>
       <h3>Preparación</h3>
       <ol class="pasos">
         ${r.pasos.map(p => `<li>${p}</li>`).join("")}
       </ol>
     </div>`;
 
+  document.getElementById("menos-porcion").addEventListener("click", () => {
+    if (porcionesSel > 1) { porcionesSel--; pintarIngredientes(); }
+  });
+  document.getElementById("mas-porcion").addEventListener("click", () => {
+    if (porcionesSel < 50) { porcionesSel++; pintarIngredientes(); }
+  });
+
+  pintarIngredientes();
   $overlay.hidden = false;
   document.body.classList.add("sin-scroll");
   $cerrar.focus();
@@ -158,17 +365,14 @@ function cerrarDetalle() {
 }
 
 $cerrar.addEventListener("click", cerrarDetalle);
-
-$overlay.addEventListener("click", (e) => {
-  if (e.target === $overlay) cerrarDetalle();
-});
-
-document.addEventListener("keydown", (e) => {
+$overlay.addEventListener("click", e => { if (e.target === $overlay) cerrarDetalle(); });
+document.addEventListener("keydown", e => {
   if (e.key === "Escape" && !$overlay.hidden) cerrarDetalle();
 });
 
 /* ---------- arranque ---------- */
 
 pintarFranja();
+pintarMapa();
 pintarChips();
 pintarGrid();
