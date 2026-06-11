@@ -21,29 +21,34 @@
     <div class="franja" id="franja-paises" aria-hidden="true"></div>
   </header>
 
-  <section class="mapa-seccion" aria-label="Explorar por mapa">
-    <button class="mapa-toggle" id="mapa-toggle" aria-expanded="true">🌍 Ocultar el mapa</button>
-    <div class="mapa" id="mapa"></div>
-  </section>
-
   <div class="controles">
-    <div class="controles-inner">
-      <div class="buscador">
+    <div class="controles-inner" id="explorador">
+      <div class="buscador area-buscar">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
           <circle cx="11" cy="11" r="7"></circle>
           <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
         </svg>
         <input type="search" id="buscar" placeholder="Busca por nombre o ingrediente: ceviche, queso, arroz…" aria-label="Buscar recetas por nombre o ingrediente">
       </div>
-      <nav class="chips" id="chips" aria-label="Filtrar por país"></nav>
-      <div class="filtros-fila">
-        <span class="rotulo">Tipo</span>
-        <nav class="chips" id="chips-tipo" aria-label="Filtrar por tipo" style="display:contents"></nav>
+
+      <nav class="chips panel-paises" id="chips" aria-label="Filtrar por país"></nav>
+
+      <section class="area-mapa" aria-label="Explorar por mapa">
+        <button class="mapa-toggle" id="mapa-toggle" aria-expanded="true">🌍 Ocultar el mapa</button>
+        <div class="mapa" id="mapa"></div>
+      </section>
+
+      <div class="panel-filtros">
+        <div class="filtros-fila">
+          <span class="rotulo">Tipo</span>
+          <nav class="chips" id="chips-tipo" aria-label="Filtrar por tipo" style="display:contents"></nav>
+        </div>
+        <div class="filtros-fila">
+          <span class="rotulo">Dificultad</span>
+          <nav class="chips" id="chips-dif" aria-label="Filtrar por dificultad" style="display:contents"></nav>
+        </div>
       </div>
-      <div class="filtros-fila">
-        <span class="rotulo">Dificultad</span>
-        <nav class="chips" id="chips-dif" aria-label="Filtrar por dificultad" style="display:contents"></nav>
-      </div>
+
       <p class="contador" id="contador"></p>
     </div>
   </div>
@@ -65,6 +70,7 @@
 
   <footer class="pie">
     <p>Sabores del Mundo — recetas tradicionales de Argentina, Bolivia, Brasil, Chile, Colombia, Ecuador, Paraguay, Perú, Uruguay, Venezuela, México, España, Italia, Francia, China y Japón.</p>
+    <p style="opacity:.55; margin-top:6px">versión 4</p>
   </footer>
 
   <script src="recetas.js"></script>

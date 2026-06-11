@@ -221,6 +221,7 @@ $mapa.addEventListener("click", e => {
 
 $mapaBtn.addEventListener("click", () => {
   const oculto = $mapa.classList.toggle("oculto");
+  document.getElementById("explorador").classList.toggle("sin-mapa", oculto);
   $mapaBtn.setAttribute("aria-expanded", String(!oculto));
   $mapaBtn.textContent = oculto ? "🌍 Mostrar el mapa" : "🌍 Ocultar el mapa";
 });
